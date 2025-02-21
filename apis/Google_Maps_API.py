@@ -1,82 +1,129 @@
 import requests
-from requests.exceptions import RequestException
+import os
+import csv
 import time
-import backoff  # For exponential backoff
+from dotenv import load_dotenv, find_dotenv
 
-class GoogleMapsAPIClient:
-    def __init__(self, api_key):
-        self.api_key = api_key
-        self.base_url = "https://maps.googleapis.com/maps/api"
-        self.session = requests.Session()
-        self.session.headers.update({
-            'User-Agent': 'GastroGPT/1.0',
-            'Accept': 'application/json'
-        })
+load_dotenv(find_dotenv())
 
-    @backoff.on_exception(backoff.expo, RequestException, max_tries=3)
-    def _make_request(self, endpoint, params):
-        """Generic method to make API requests with error handling"""
+GOOGLE_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
+
+# print(f"API Key: {GOOGLE_API_KEY}")
+
+
+def get_nearest_restaurants(location, N=10, keyword=None):
+    """
+    Retrieve the nearest N restaurants with error handling.
+    
+    Parameters:
+    - location: (latitude, longitude) tuple representing the search center.
+    - N: Number of restaurants to retrieve.
+    - keyword: Search keyword (e.g., "korean", "japanese"). If None, retrieves all restaurants.
+    
+    Returns:
+    - A list of restaurant details, or an empty list if the request fails.
+    """
+
+    NEARBYSEARCH_URL = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+
+    latitude, longitude = location
+    restaurants = []
+    next_page_token = None
+
+    while len(restaurants) < N:
         try:
-            response = self.session.get(
-                f"{self.base_url}/{endpoint}",
-                params=params,
-                timeout=10
-            )
-            response.raise_for_status()
-            
-            if response.status_code == 429:  # Rate limit exceeded
-                retry_after = int(response.headers.get('Retry-After', 60))
-                time.sleep(retry_after)
-                return self._make_request(endpoint, params)
-                
-            return response.json()
-            
-        except requests.exceptions.HTTPError as http_err:
-            if response.status_code == 401:
-                raise ValueError("Invalid API key")
-            elif response.status_code == 404:
-                raise ValueError(f"Resource not found: {endpoint}")
-            raise http_err
-        except requests.exceptions.ConnectionError:
-            raise ConnectionError("Failed to connect to Google Maps API")
-        except requests.exceptions.Timeout:
-            raise TimeoutError("Request timed out")
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"API request failed: {str(e)}")
-
-    def get_nearest_restaurants(self, location, N=10, keyword=None):
-        """Enhanced version with proper error handling"""
-        latitude, longitude = location
-        restaurants = []
-        next_page_token = None
-        
-        while len(restaurants) < N:
             params = {
                 "location": f"{latitude},{longitude}",
                 "type": "restaurant",
                 "rankby": "distance",
-                "key": self.api_key
+                "key": GOOGLE_API_KEY
             }
             if keyword:
                 params["keyword"] = keyword
             if next_page_token:
                 params["pagetoken"] = next_page_token
 
-            try:
-                data = self._make_request("place/nearbysearch/json", params)
-                if "error_message" in data:
-                    raise ValueError(f"API Error: {data['error_message']}")
-                    
-                if "results" in data:
-                    restaurants.extend(data["results"])
-                next_page_token = data.get("next_page_token")
-                if not next_page_token:
-                    break
-                    
-                time.sleep(2)  # Respect API rate limits
-                
-            except Exception as e:
-                logger.error(f"Failed to fetch restaurants: {str(e)}")
-                break
+            response = requests.get(NEARBYSEARCH_URL, params=params)
+            data = response.json()
 
-        return restaurants[:N]
+            if "results" in data:
+                restaurants.extend(data["results"])
+            if "next_page_token" in data:
+                next_page_token = data["next_page_token"]
+                time.sleep(2)
+            else:
+                break
+        except requests.exceptions.Timeout:
+            print("Error: API request timed out.")
+            break
+        except requests.exceptions.RequestException as e:
+            print(f"Error: API request failed - {e}")
+            break
+        except KeyError as e:
+            print(f"Error: Missing key in API response - {e}")
+            break
+
+    return restaurants[:N]
+
+def get_restaurant_details(place_id):
+    """
+    Retrieve detailed restaurant information using Google Places Details API.
+    
+    Parameters:
+    - place_id: Unique Place ID from Google Places API.
+    
+    Returns:
+    - A dictionary containing restaurant details, or None if the request fails.
+    """
+    DETAILS_URL = "https://maps.googleapis.com/maps/api/place/details/json"
+
+    try:
+        params = {
+            "place_id": place_id,
+            "fields": "name,rating,formatted_address,formatted_phone_number,opening_hours,reviews",
+            "key": GOOGLE_API_KEY
+        }
+        
+        response = requests.get(DETAILS_URL, params=params)
+        data = response.json()
+        
+        if "result" in data:
+            return data["result"]
+        else:
+            print(f"Warning: No 'result' field for place_id {place_id}.")
+            return None
+        
+    except requests.exceptions.Timeout:
+        print(f"Error: Timeout while fetching details for place_id {place_id}.")
+    except requests.exceptions.RequestException as e:
+        print(f"Error: API request failed for place_id {place_id} - {e}")
+    except KeyError as e:
+        print(f"Error: Missing key in API response - {e}")
+    return None
+
+gt_location = (33.7756, -84.3963)
+nearest_restaurants = get_nearest_restaurants(gt_location, N=30, keyword='korean')
+
+
+with open("restaurants.csv", "w", newline="", encoding="utf-8-sig") as file:
+    writer = csv.writer(file)
+    
+    # write the head of table to csv
+    writer.writerow(["Name", "Rating", "Address", "Phone", "Review 1", "Review 2", "Review 3"])
+
+    # write data of each restaurant to csv
+    for restaurant in nearest_restaurants[:10]:
+        place_id = restaurant["place_id"]
+        details = get_restaurant_details(place_id)
+
+        writer.writerow([
+            details["name"],
+            details["rating"],
+            details["formatted_address"],
+            details.get("formatted_phone_number", "N/A"),
+            details.get("reviews", [{}])[0].get("text", "")[:],
+            details.get("reviews", [{}])[1].get("text", "")[:],
+            details.get("reviews", [{}])[2].get("text", "")[:]
+        ])
+
+print("data saved to `restaurants.csv` successfully")
