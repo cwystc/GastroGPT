@@ -1,6 +1,6 @@
+# services/google_maps_service.py
 import requests
 import os
-import csv
 import time
 from dotenv import load_dotenv, find_dotenv
 
@@ -8,18 +8,15 @@ load_dotenv(find_dotenv())
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 
-# print(f"API Key: {GOOGLE_API_KEY}")
-
-
 def get_nearest_restaurants(location, N=10, keyword=None):
     """
     Retrieve the nearest N restaurants with error handling.
-    
+
     Parameters:
     - location: (latitude, longitude) tuple representing the search center.
     - N: Number of restaurants to retrieve.
     - keyword: Search keyword (e.g., "korean", "japanese"). If None, retrieves all restaurants.
-    
+
     Returns:
     - A list of restaurant details, or an empty list if the request fails.
     """
@@ -68,10 +65,10 @@ def get_nearest_restaurants(location, N=10, keyword=None):
 def get_restaurant_details(place_id):
     """
     Retrieve detailed restaurant information using Google Places Details API.
-    
+
     Parameters:
     - place_id: Unique Place ID from Google Places API.
-    
+
     Returns:
     - A dictionary containing restaurant details, or None if the request fails.
     """
@@ -83,16 +80,16 @@ def get_restaurant_details(place_id):
             "fields": "name,rating,formatted_address,formatted_phone_number,opening_hours,reviews",
             "key": GOOGLE_API_KEY
         }
-        
+
         response = requests.get(DETAILS_URL, params=params)
         data = response.json()
-        
+
         if "result" in data:
             return data["result"]
         else:
             print(f"Warning: No 'result' field for place_id {place_id}.")
             return None
-        
+
     except requests.exceptions.Timeout:
         print(f"Error: Timeout while fetching details for place_id {place_id}.")
     except requests.exceptions.RequestException as e:
@@ -100,30 +97,3 @@ def get_restaurant_details(place_id):
     except KeyError as e:
         print(f"Error: Missing key in API response - {e}")
     return None
-
-gt_location = (33.7756, -84.3963)
-nearest_restaurants = get_nearest_restaurants(gt_location, N=30, keyword='korean')
-
-
-with open("restaurants.csv", "w", newline="", encoding="utf-8-sig") as file:
-    writer = csv.writer(file)
-    
-    # write the head of table to csv
-    writer.writerow(["Name", "Rating", "Address", "Phone", "Review 1", "Review 2", "Review 3"])
-
-    # write data of each restaurant to csv
-    for restaurant in nearest_restaurants[:10]:
-        place_id = restaurant["place_id"]
-        details = get_restaurant_details(place_id)
-
-        writer.writerow([
-            details["name"],
-            details["rating"],
-            details["formatted_address"],
-            details.get("formatted_phone_number", "N/A"),
-            details.get("reviews", [{}])[0].get("text", "")[:],
-            details.get("reviews", [{}])[1].get("text", "")[:],
-            details.get("reviews", [{}])[2].get("text", "")[:]
-        ])
-
-print("data saved to `restaurants.csv` successfully")
