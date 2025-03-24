@@ -1,2 +1,60 @@
+# === Python Bytecode ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# === Environment / Virtualenv ===
+*.env
 .env
+.env.*
+.venv/
+venv/
+pip-log.txt
+
+# === Jupyter / IPython ===
+.ipynb_checkpoints/
+
+# === OS / Editor files ===
 .DS_Store
+*.swp
+*.swo
+*.bak
+*.tmp
+.idea/
+.vscode/
+
+# === Logs / Outputs ===
+*.log
+*.out
+*.err
+output/
+results/
+*.csv~
+
+# === Docker ===
+*.pid
+*.db
+*.tar
+*.sock
+docker-compose.override.yml
+
+# === FAISS indexes or large models (optional) ===
+*.index
+*.bin
+*.h5
+*.pt
+
+# === Build / Dist (in case you package) ===
+build/
+dist/
+*.egg-info/
+
+# === Test cache ===
+htmlcov/
+.tox/
+.coverage
+pytest_cache/
+
+# === Git ===
+*.orig

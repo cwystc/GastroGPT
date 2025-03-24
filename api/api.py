@@ -17,7 +17,7 @@ def fetch_and_store_restaurants(location, N=10, keyword=None, filename="data/res
     nearest_restaurants = google_maps_service.get_nearest_restaurants(location, N, keyword)
 
     restaurants_data = []
-    for restaurant in nearest_restaurants[:10]:  # Limit to 10 for the example
+    for restaurant in nearest_restaurants:
         place_id = restaurant["place_id"]
         details = google_maps_service.get_restaurant_details(place_id)
 
