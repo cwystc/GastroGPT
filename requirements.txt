@@ -7,3 +7,4 @@ pandas
 scikit-learn
 scipy
 tqdm
+openai>=1.2.4
