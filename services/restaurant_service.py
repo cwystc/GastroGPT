@@ -5,6 +5,8 @@ from models.embedding_model import EmbeddingModel
 from models.vector_store import VectorStore
 from services.google_maps_service import GoogleMapsService
 from utils.text_processing import clean_text
+import nltk
+from nltk.tokenize import sent_tokenize
 
 
 class RestaurantService:
@@ -16,40 +18,48 @@ class RestaurantService:
 
     from utils.text_processing import clean_text
 
-    def combine_text_chunks(row, min_words=3, max_char_length=300):
+    def combine_text_chunks(row, min_words=3, max_char_length=2000):
         """
         split and clean the reviews to multiple chunks, and get it combined to become metadata
-
+        拼接所有 reviews → 清洗 → 句子切割 → chunking,不拼接 meta data
         Args:
             row: one row of DataFrame 
             min_words: smallest number of word in one chunk 最少包含的词数
-            max_char_length: 单个 chunk 最多字符数（防止过长）
+            max_char_length: one chunk maximum length(prevent the chunk is too large to embedded)
 
         Returns:
-            List[str]: 拼接好的 chunk 列表，每个 chunk 是独立的一段文字。
+            List[str]: a list of chunk. 拼接好的 chunk 列表，每个 chunk 是独立的一段文字。
         """
-        chunks_list = []
+        # 1. combined all the reviews
+        review_number = 3
+        all_reviews = " ".join(
+            str(row[f"Review {i}"]) for i in range(1, review_number+1) if pd.notnull(row.get(f"Review {i}"))
+        )
 
-        for i in range(1, 4): #from review1 to review3
-            
-            review = row.get(f"Review {i}")
-            if pd.notnull(review):
-                cleaned = clean_text(str(review))
+        # 2. clean
+        cleaned = clean_text(all_reviews)
 
-                # # 按句子拆也可以按逻辑拆分也可以跳过这里直接处理
-                words = cleaned.split()
-                if len(words) < min_words:
-                    continue  # 跳过太短的
+        # 3. tokenize
+        sentences = sent_tokenize(cleaned)
 
-                # 按 max_char_length 拆 review 成多个 chunk
-                
-                for j in range(0, len(cleaned), max_char_length):
-                    review_chunk = cleaned[j:j + max_char_length]
-                    if len(review_chunk.split()) >= min_words:
-                        
-                        chunks_list.append(review_chunk)
+        # 4. Chunking
+        chunks = []
+        current_chunk = ""
 
-        return chunks_list
+        for sentence in sentences:
+            if len(current_chunk) + len(sentence) + 1 <= max_char_length:
+                current_chunk += " " + sentence
+            else:
+                if len(current_chunk.split()) >= min_words:
+                    chunks.append(current_chunk.strip())
+                current_chunk = sentence
+
+        # last one
+        if len(current_chunk.split()) >= min_words:
+            chunks.append(current_chunk.strip())
+
+        return chunks # lists of chunks that belongs to one restaurant
+
 
 
     def prepare_vector_store(self):
