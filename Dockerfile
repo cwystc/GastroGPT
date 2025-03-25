@@ -18,5 +18,8 @@ COPY . /app
 RUN pip install --no-cache-dir --upgrade pip \
  && pip install --no-cache-dir -r requirements.txt
 
+RUN python -m nltk.downloader punkt stopwords wordnet
+
+
 # Default run command
 CMD ["python", "main.py"]

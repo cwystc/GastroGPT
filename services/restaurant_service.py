@@ -4,6 +4,8 @@ import pandas as pd
 from models.embedding_model import EmbeddingModel
 from models.vector_store import VectorStore
 from services.google_maps_service import GoogleMapsService
+from utils.text_processing import clean_text
+
 
 class RestaurantService:
     def __init__(self, file_path: str, google_maps_api_key: str):
@@ -12,10 +14,43 @@ class RestaurantService:
         self.vector_store = None
         self.google_maps_service = GoogleMapsService(google_maps_api_key)
 
-    def combine_text(self, row):
-        reviews = " ".join(str(row[f"Review {i}"]) for i in range(1, 4) if pd.notnull(row[f"Review {i}"]))
-        text = f"{row['Name']}. Rating: {row['Rating']}. Address: {row['Address']}. Phone: {row['Phone']}. Reviews: {reviews}"
-        return text
+    from utils.text_processing import clean_text
+
+    def combine_text_chunks(row, min_words=3, max_char_length=300):
+        """
+        split and clean the reviews to multiple chunks, and get it combined to become metadata
+
+        Args:
+            row: one row of DataFrame 
+            min_words: smallest number of word in one chunk 最少包含的词数
+            max_char_length: 单个 chunk 最多字符数（防止过长）
+
+        Returns:
+            List[str]: 拼接好的 chunk 列表，每个 chunk 是独立的一段文字。
+        """
+        chunks_list = []
+
+        for i in range(1, 4): #from review1 to review3
+            
+            review = row.get(f"Review {i}")
+            if pd.notnull(review):
+                cleaned = clean_text(str(review))
+
+                # # 按句子拆也可以按逻辑拆分也可以跳过这里直接处理
+                words = cleaned.split()
+                if len(words) < min_words:
+                    continue  # 跳过太短的
+
+                # 按 max_char_length 拆 review 成多个 chunk
+                
+                for j in range(0, len(cleaned), max_char_length):
+                    review_chunk = cleaned[j:j + max_char_length]
+                    if len(review_chunk.split()) >= min_words:
+                        
+                        chunks_list.append(review_chunk)
+
+        return chunks_list
+
 
     def prepare_vector_store(self):
         texts = self.df.apply(self.combine_text, axis=1).tolist()

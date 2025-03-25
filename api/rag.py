@@ -20,6 +20,7 @@ def create_index_and_add_vectors(df):
 
     restaurant_texts = data_loader.combine_text(df)  # Use data_loader function
 
+    #pre-process the restaurant information:
     # 3. Load embedding model
     model = embedding_model.load_model()
 
@@ -45,6 +46,7 @@ def search_restaurants(index, query, k=5):
         list: A list of tuples containing (distance, restaurant row).
     """
     model = embedding_model.load_model()
+    # query = clean_text(query)
     query_vector = model.encode([query], normalize_embeddings=True)
     distances, indices = index.search(np.array(query_vector), k)
 
