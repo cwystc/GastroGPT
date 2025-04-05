@@ -1,79 +1,116 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
 
 function App() {
   const [location, setLocation] = useState(null);
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const getLocation = () => {
+  // Auto-fetch location on component mount
+  useEffect(() => {
     if (!navigator.geolocation) {
       setError("Geolocation is not supported by your browser.");
       return;
     }
-
+  
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocation({
+      async (position) => {
+        const loc = {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
-        });
+        };
+        setLocation(loc);
         setError('');
+  
+        try {
+          const response = await fetch('http://localhost:5000/rag/init', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(loc),
+          });
+  
+          const data = await response.json();
+          if (!response.ok) {
+            setError(data.error || 'Index initialization failed');
+          }
+        } catch (err) {
+          setError("Failed to initialize index.");
+        }
       },
-      (err) => setError("Unable to retrieve your location.")
+      () => {
+        setError("Failed to retrieve your location.");
+      }
     );
-  };
+  }, []);
+  
 
-  const submitQuestion = async () => {
+  const handleSubmit = async () => {
     if (!location || !question) {
-      setError("Please get your location and enter a question.");
+      setError("Please ensure your location is fetched and question is filled.");
       return;
     }
 
-    setLoading(true);
-    setError('');
-    setAnswer('');
-
     try {
-      const response = await axios.post('https://your-api-endpoint.com/ask', {
-        question,
-        latitude: location.latitude,
-        longitude: location.longitude
+      const response = await fetch('http://localhost:5000/rag/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question,
+          latitude: location.latitude,
+          longitude: location.longitude,
+        }),
       });
 
-      setAnswer(response.data.answer);
+      const data = await response.json();
+      if (data.answer) {
+        setAnswer(data.answer);
+        setError('');
+      } else {
+        setError(data.error || 'No answer received.');
+      }
     } catch (err) {
-      setError("Error fetching answer from server.");
-    } finally {
-      setLoading(false);
+      setError("Failed to contact server.");
     }
   };
 
   return (
-    <div style={{ padding: 20, maxWidth: 600, margin: "0 auto" }}>
-      <h1>RAG Assistant</h1>
-      <button onClick={getLocation}>📍 Get My Location</button>
-      {location && (
-        <p>Location: {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}</p>
+    <div style={{ padding: '2rem', maxWidth: '600px', margin: '0 auto' }}>
+      <h1>🍜 Restaurant RAG Assistant</h1>
+
+      {location ? (
+        <iframe
+          title="Your Location"
+          width="100%"
+          height="250"
+          frameBorder="0"
+          style={{ border: 0 }}
+          src={`https://maps.google.com/maps?q=${location.latitude},${location.longitude}&z=15&output=embed`}
+          allowFullScreen
+        ></iframe>
+      ) : (
+        <p>📍 Trying to detect your location...</p>
       )}
+
       <textarea
-        rows={4}
-        style={{ width: "100%", marginTop: 10 }}
-        placeholder="Ask me something..."
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
+        placeholder="Enter your question (e.g., What's a good sushi place nearby?)"
+        rows={4}
+        style={{ width: '100%', marginTop: '1rem' }}
       />
-      <button onClick={submitQuestion} disabled={loading} style={{ marginTop: 10 }}>
-        {loading ? "Loading..." : "Submit"}
+
+      <button onClick={handleSubmit} style={{ marginTop: '1rem' }}>
+        🔍 Submit Question
       </button>
+
       {answer && (
-        <div style={{ marginTop: 20, padding: 10, backgroundColor: "#f0f0f0" }}>
-          <strong>Answer:</strong> {answer}
+        <div style={{ marginTop: '1rem', background: '#f0f0f0', padding: '1rem' }}>
+          <strong>💬 LLM Answer:</strong>
+          <p>{answer}</p>
         </div>
       )}
-      {error && <p style={{ color: "red" }}>{error}</p>}
+
+      {error && <p style={{ color: 'red' }}>{error}</p>}
     </div>
   );
 }
