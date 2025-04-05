@@ -12,9 +12,6 @@ def answer_to_user(question, index, indexid_to_restaurant):
     # step 1
     distances, indices = rag.search_restaurants(index, cleaned_question, k=30)
 
-
-
-
     # 6. Get the restaurant information
 
 

@@ -9,16 +9,14 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 
-# 下载资源（开发阶段）
-nltk.download('punkt')
-nltk.download('stopwords')
-nltk.download('wordnet')
 
 stop_words = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
 
-# ✅ 手动加载 punkt 分句模型
-punkt_path = os.path.join(os.getenv("NLTK_DATA", "/root/nltk_data"), "tokenizers", "punkt", "english.pickle")
+
+import nltk.data
+punkt_path = nltk.data.find("tokenizers/punkt/english.pickle")
+
 with open(punkt_path, "rb") as f:
     punkt_tokenizer = pickle.load(f)
 
