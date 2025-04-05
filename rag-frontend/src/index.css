@@ -11,3 +11,55 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+
+
+button {
+  margin-top: 1rem;
+  width: 100%;
+  padding: 0.9rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 1rem;
+  background-color: #4f9efc;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #367dd9;
+}
+
+.answer-box {
+  margin-top: 1.5rem;
+  background-color: #f0f4ff;
+  border-left: 4px solid #4f9efc;
+  padding: 1rem;
+  border-radius: 1rem;
+}
+
+h1 {
+  text-align: center;
+  color: #4f9efc;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+textarea {
+  width: 90%;
+  padding: 1rem;
+  font-size: 1rem;
+  border-radius: 1rem;
+  border: 1px solid #dce3ed;
+  background-color: #f9fbff;
+  color: #444;
+  transition: border-color 0.3s ease;
+}
+
+textarea:focus {
+  border-color: #4f9efc;
+  outline: none;
+  background-color: #ffffff;
+}

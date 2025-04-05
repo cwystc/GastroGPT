@@ -12,3 +12,7 @@ tqdm
 openai>=1.2.4,<2.0.0
 nltk
 beautifulsoup4
+
+flask
+
+
