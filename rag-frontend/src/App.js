@@ -23,7 +23,7 @@ function App() {
         setError('');
   
         try {
-          const response = await fetch('http://localhost:5000/rag/init', {
+          const response = await fetch('http://127.0.0.1:5001/rag/init', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(loc),
@@ -51,7 +51,8 @@ function App() {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/rag/ask', {
+      console.log("entered try!!!");
+      const response = await fetch('http://127.0.0.1:5001/rag/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

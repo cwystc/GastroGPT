@@ -59,9 +59,6 @@ def get_nearest_restaurants(location, N=10, keyword=None):
         except KeyError as e:
             print(f"Error: Missing key in API response - {e}")
             break
-    print('gagaga')
-    print(N)
-    print(len(restaurants))
     
     return restaurants[:N]
 

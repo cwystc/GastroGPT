@@ -39,4 +39,4 @@ def answer_to_user(question, index, indexid_to_restaurant):
 
     
     ans = bot.send_message(construct_prompt)
-    print(ans)
+    return ans

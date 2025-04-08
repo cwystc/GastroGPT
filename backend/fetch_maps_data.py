@@ -34,7 +34,6 @@ def fetch_and_create_index(location, N=10, keyword=None):
 
     df = pd.DataFrame(restaurants_data)
 
-    print(df)
 
     print(f"Data fetched successfully")
 
@@ -47,7 +46,7 @@ def fetch_and_create_index(location, N=10, keyword=None):
         restaurant = restaurant_service.RestaurantService(row)
         list_of_chunks = restaurant.combine_text_chunks()
 
-        print(index, list_of_chunks)
+        # print(index, list_of_chunks)
         
         chunks.extend(list_of_chunks)
 
@@ -69,7 +68,7 @@ def fetch_and_create_index(location, N=10, keyword=None):
     dimension = restaurant_vectors.shape[1]
     index = vector_store.create_index(dimension)
 
-    print(restaurant_vectors)
+    # print(restaurant_vectors)
 
     vector_store.add_vectors_to_index(index, restaurant_vectors)
 
