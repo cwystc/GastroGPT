@@ -28,7 +28,8 @@ def fetch_and_create_index(location, N=10, keyword=None):
                 "Phone": details.get("formatted_phone_number", "N/A"),
                 "Review 1": details.get("reviews", [{}])[0].get("text", "") if details.get("reviews") else "",
                 "Review 2": details.get("reviews", [{}])[1].get("text", "") if len(details.get("reviews", [])) > 1 else "",
-                "Review 3": details.get("reviews", [{}])[2].get("text", "") if len(details.get("reviews", [])) > 2 else ""
+                "Review 3": details.get("reviews", [{}])[2].get("text", "") if len(details.get("reviews", [])) > 2 else "",
+                "Google Maps URL": details.get("url", "")
             })
 
 

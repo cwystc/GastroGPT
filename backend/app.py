@@ -50,7 +50,7 @@ def rag_init():
         return jsonify({'error': 'Missing required fields'}), 400
     try:
         location = (lat, lon)
-        current_index, index_mapping = fetch_and_create_index(location)
+        current_index, index_mapping = fetch_and_create_index(location, 30)
         return jsonify({'message': 'Index initialized successfully'})
     except Exception as e:
         return jsonify({'error': str(e)}), 500

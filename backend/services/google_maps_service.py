@@ -77,7 +77,7 @@ def get_restaurant_details(place_id):
     try:
         params = {
             "place_id": place_id,
-            "fields": "name,rating,formatted_address,formatted_phone_number,opening_hours,reviews",
+            "fields": "name,rating,formatted_address,formatted_phone_number,opening_hours,reviews,url",
             "key": GOOGLE_API_KEY
         }
 
