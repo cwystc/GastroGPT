@@ -13,15 +13,9 @@ logging.basicConfig(
 )
 
 
-
 app = Flask(__name__, static_folder='../rag-frontend/build', static_url_path='')
-# print("✅ 初始化 CORS 前")
-CORS(app, supports_credentials=True)
-# print("✅ 初始化 CORS 后")
 
-# CORS(app)  # ✅ 最通用、无路径限制
-# CORS(app, resources={r"/rag/*": {"origins": "*"}})
-# CORS(app, supports_credentials=True)
+CORS(app, supports_credentials=True)
 
 
 current_index = None
