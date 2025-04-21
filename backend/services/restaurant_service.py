@@ -12,8 +12,8 @@ class RestaurantService:
     def __init__(self, row):
         self.row = row
         reviews = " ".join(str(row[f"Review {i}"]) for i in range(1, 4) if pd.notnull(row[f"Review {i}"]))
-        self.info = f"{row['Name']}. Rating: {row['Rating']}. Address: {row['Address']}. Phone: {row['Phone']}. Reviews: {reviews}"
-        
+        self.info = f"{row['Name']}. Rating: {row['Rating']}. Address: {row['Address']}. Phone: {row['Phone']}. Reviews: {reviews}. Google Maps URL: {row['Google Maps URL']}"
+        self.url = row['Google Maps URL']
         # self.embedding_model = EmbeddingModel()
         # self.vector_store = None
 

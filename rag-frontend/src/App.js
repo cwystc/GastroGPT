@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 function App() {
   const [location, setLocation] = useState(null);
   const [question, setQuestion] = useState('');
-  const [answer, setAnswer] = useState('');
+  const [answer, setAnswer] = useState([]);
   const [error, setError] = useState('');
 
   // Auto-fetch location on component mount
@@ -12,7 +12,7 @@ function App() {
       setError("Geolocation is not supported by your browser.");
       return;
     }
-  
+
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const loc = {
@@ -21,14 +21,14 @@ function App() {
         };
         setLocation(loc);
         setError('');
-  
+
         try {
           const response = await fetch('http://127.0.0.1:5001/rag/init', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(loc),
           });
-  
+
           const data = await response.json();
           if (!response.ok) {
             setError(data.error || 'Index initialization failed');
@@ -42,7 +42,6 @@ function App() {
       }
     );
   }, []);
-  
 
   const handleSubmit = async () => {
     if (!location || !question) {
@@ -63,7 +62,7 @@ function App() {
       });
 
       const data = await response.json();
-      if (data.answer) {
+      if (data.answer && data.answer.length > 0) {
         setAnswer(data.answer);
         setError('');
       } else {
@@ -104,12 +103,24 @@ function App() {
         🔍 Submit Question
       </button>
 
-      {answer && (
-        <div style={{ marginTop: '1rem', background: '#f0f0f0', padding: '1rem' }}>
-          <strong>💬 LLM Answer:</strong>
-          <p>{answer}</p>
-        </div>
-      )}
+      {answer.length > 0 && (
+  <div style={{ marginTop: '1rem', background: '#f0f0f0', padding: '1rem' }}>
+    <strong>💬 Recommended Restaurants:</strong>
+    {answer.map((item, idx) => (
+      <div key={idx} style={{ marginTop: '1rem' }}>
+        <p><strong>{item.name}</strong></p>
+        <p>
+          <a href={item.url} target="_blank" rel="noopener noreferrer">
+            View on Google Maps
+          </a>
+        </p>
+        <p>Reason: {item.reason}</p>
+        <hr />
+      </div>
+    ))}
+  </div>
+)}
+
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
     </div>
