@@ -9,7 +9,7 @@ load_dotenv(find_dotenv())
 
 DEEPSEEK_KEY = os.getenv("DEEPSEEK_API_KEY")
 if not DEEPSEEK_KEY:
-    raise ValueError("请在 .env 文件中设置 DEEPSEEK_API_KEY")
+    raise ValueError("please set in .env for DEEPSEEK_API_KEY")
 
 class DeepSeekChatBot:
     def __init__(self, system_prompt: str = "You are a helpful assistant."):
